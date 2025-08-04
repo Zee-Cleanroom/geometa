@@ -5,8 +5,8 @@
 // @author       monkey
 // @description  UserScript for GeoGuessr Learnable Meta maps
 // @icon         https://learnablemeta.com/favicon.png
-// @downloadURL  https://github.com/likeon/geometa/raw/main/dist/geometa.user.js
-// @updateURL    https://github.com/likeon/geometa/raw/main/dist/geometa.user.js
+// @downloadURL  https://github.com/Zee-Cleanroom/geometa/raw/main/dist/geometa.user.js
+// @updateURL    https://github.com/Zee-Cleanroom/geometa/raw/main/dist/geometa.user.js
 // @match        *://*.geoguessr.com/*
 // @require      https://raw.githubusercontent.com/miraclewhips/geoguessr-event-framework/5e449d6b64c828fce5d2915772d61c7f95263e34/geoguessr-event-framework.js
 // @connect      learnablemeta.com
