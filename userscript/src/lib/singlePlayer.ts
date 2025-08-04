@@ -2,6 +2,7 @@ import { getMapInfo, logInfo, waitForElement } from './utils/main';
 import { mount } from 'svelte';
 import App from './App.svelte';
 import { unsafeWindow } from '$';
+import { mountHintPanel } from './hintPanel';
 
 //@ts-ignore
 const GeoGuessrEventFramework = unsafeWindow.GeoGuessrEventFramework;
@@ -45,6 +46,7 @@ export function initSinglePlayer() {
     });
     GeoGuessrEventFramework.events.addEventListener('round_end', async (event: GGEvent) => {
       document.getElementById('geometa-summary')?.remove();
+      document.getElementById('geometa-hints')?.remove();
 
       const mapInfo = await getMapInfo(event.detail.map.id, false);
       if (!mapInfo.mapFound) {
@@ -52,7 +54,7 @@ export function initSinglePlayer() {
         return;
       }
       logInfo('waiting for the result view to render');
-      waitForElement('div[data-qa="result-view-top"]').then((container) => {
+      waitForElement('[class*=result-layout_root__], div[data-qa="result-view-top"]').then((container) => {
         if (!container) {
           return;
         }
@@ -72,6 +74,7 @@ export function initSinglePlayer() {
             source: (window.location.href.includes('challenge') ? 'challenge' : 'map')
           }
         });
+        mountHintPanel(container);
       });
     });
     GeoGuessrEventFramework.events.addEventListener('game_end', async (event: GGEvent) => {
@@ -127,6 +130,7 @@ export function initSinglePlayer() {
         currentPinObserver.disconnect();
         currentPinObserver = null;
       }
+      document.getElementById('geometa-hints')?.remove();
     });
   });
 }
