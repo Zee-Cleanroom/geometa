@@ -15,7 +15,7 @@ export default defineConfig({
         name: 'GeoGuessr Learnable Meta',
         description: 'UserScript for GeoGuessr Learnable Meta maps',
         match: ['*://*.geoguessr.com/*'],
-        connect: ['learnablemeta.com'],
+        connect: ['learnablemeta.com', 'kacuunztbvznzhfsyfgp.supabase.co'],
         updateURL: 'https://github.com/likeon/geometa/raw/main/dist/geometa.user.js',
         downloadURL: 'https://github.com/likeon/geometa/raw/main/dist/geometa.user.js',
         'run-at': 'document-start',
