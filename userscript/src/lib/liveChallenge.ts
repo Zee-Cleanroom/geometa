@@ -1,11 +1,12 @@
 import { mount } from "svelte";
 import { getChallengeId, getChallengeInfo, getMapInfo, logInfo, waitForElement } from "./utils/main";
 import App from './App.svelte';
+import { mountHintPanel } from './hintPanel';
 
 export function initLiveChallenge() {
   logInfo('live challenge support enabled');
   let pinChanged = false;
-  const observer = new MutationObserver(async (mutations) => {
+  const observer = new MutationObserver(async () => {
     if (!document.querySelector('[class*=result-map_roundPin]')) {
       pinChanged = false;
       return;
@@ -14,12 +15,13 @@ export function initLiveChallenge() {
       return;
     }
     pinChanged = true;
+    document.getElementById('geometa-hints')?.remove();
     const challengeId = getChallengeId();
     if (challengeId) {
       const { mapId, panoId } = await getChallengeInfo(challengeId);
       const mapInfo = await getMapInfo(mapId, false);
       if (!mapInfo.mapFound) return;
-      waitForElement('[class*=game_container]').then((container) => {
+      waitForElement('[class*=result-layout_root__], div[data-qa="result-view-top"]').then((container) => {
         if (!container) {
           return;
         }
@@ -37,6 +39,7 @@ export function initLiveChallenge() {
             source: 'liveChallenge'
           }
         });
+        mountHintPanel(container);
       });
     }
   });
@@ -46,4 +49,9 @@ export function initLiveChallenge() {
   } else {
     console.error('document.body is not available.');
   }
+
+  window.addEventListener('urlchange', () => {
+    observer.disconnect();
+    document.getElementById('geometa-hints')?.remove();
+  });
 }
