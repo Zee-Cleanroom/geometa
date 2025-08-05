@@ -1,7 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { GM_xmlhttpRequest } from '$';
-  import { countryNames } from '../../../../apps/api/src/lib/userscript/constants';
+  import {
+    countryNames,
+    countryContinents
+  } from '../../../../apps/api/src/lib/userscript/constants';
 
   const SUPABASE_URL = 'https://kacuunztbvznzhfsyfgp.supabase.co';
   const SUPABASE_KEY =
@@ -12,6 +15,7 @@
   let description = '';
   let image_url = '';
   let error = '';
+  let continent = '';
 
   const fallbackMetaTypes = ['bollard', 'car', 'sign', 'language', 'generation', 'antenna', 'coverage'];
   let metaTypes: string[] = [];
@@ -23,6 +27,8 @@
     detectMetaType();
     detectImage();
   });
+
+  $: continent = countryContinents[country] || '';
 
   function detectDescription() {
     description = document.querySelector('.geometa-note')?.textContent?.trim() || '';
@@ -95,13 +101,14 @@
           Authorization: `Bearer ${SUPABASE_KEY}`,
           'Content-Type': 'application/json'
         },
-        data: JSON.stringify({ country, meta_type, description, image_url })
+        data: JSON.stringify({ country, continent, meta_type, description, image_url })
       });
       if (res.status >= 200 && res.status < 300) {
         country = '';
         meta_type = '';
         description = '';
         image_url = '';
+        continent = '';
         error = '';
       } else {
         error = `Failed to submit: ${res.status} ${res.responseText}`;

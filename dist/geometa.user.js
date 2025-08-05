@@ -1552,6 +1552,39 @@
   function effect(fn) {
     return create_effect(EFFECT, fn, false);
   }
+  function legacy_pre_effect(deps, fn) {
+    var context = (
+      /** @type {ComponentContextLegacy} */
+      component_context
+    );
+    var token = { effect: null, ran: false, deps };
+    context.l.$.push(token);
+    token.effect = render_effect(() => {
+      deps();
+      if (token.ran) return;
+      token.ran = true;
+      untrack(fn);
+    });
+  }
+  function legacy_pre_effect_reset() {
+    var context = (
+      /** @type {ComponentContextLegacy} */
+      component_context
+    );
+    render_effect(() => {
+      for (var token of context.l.$) {
+        token.deps();
+        var effect2 = token.effect;
+        if ((effect2.f & CLEAN) !== 0) {
+          set_signal_status(effect2, MAYBE_DIRTY);
+        }
+        if (is_dirty(effect2)) {
+          update_effect(effect2);
+        }
+        token.ran = false;
+      }
+    });
+  }
   function async_effect(fn) {
     return create_effect(ASYNC | EFFECT_PRESERVED, fn, true);
   }
@@ -4804,6 +4837,208 @@
     "Zambia",
     "Zimbabwe"
   ];
+  const countryContinents = {
+    "Afghanistan": "Asia",
+    "Albania": "Europe",
+    "Algeria": "Africa",
+    "Andorra": "Europe",
+    "Angola": "Africa",
+    "Argentina": "South America",
+    "Armenia": "Asia",
+    "Australia": "Oceania",
+    "Austria": "Europe",
+    "Azerbaijan": "Asia",
+    "Bahamas": "North America",
+    "Bahrain": "Asia",
+    "Bangladesh": "Asia",
+    "Barbados": "North America",
+    "Belarus": "Europe",
+    "Belgium": "Europe",
+    "Belize": "North America",
+    "Benin": "Africa",
+    "Bhutan": "Asia",
+    "Bolivia": "South America",
+    "Bosnia and Herzegovina": "Europe",
+    "Botswana": "Africa",
+    "Brazil": "South America",
+    "Brunei": "Asia",
+    "Bulgaria": "Europe",
+    "Burkina Faso": "Africa",
+    "Burundi": "Africa",
+    "Cabo Verde": "Africa",
+    "Cambodia": "Asia",
+    "Cameroon": "Africa",
+    "Canada": "North America",
+    "Central African Republic": "Africa",
+    "Chad": "Africa",
+    "Chile": "South America",
+    "China": "Asia",
+    "Colombia": "South America",
+    "Comoros": "Africa",
+    "Congo": "Africa",
+    "Costa Rica": "North America",
+    "Croatia": "Europe",
+    "Cuba": "North America",
+    "Curacao": "North America",
+    "Cyprus": "Europe",
+    "Czechia": "Europe",
+    "Christmas Island": "Asia",
+    "Democratic Republic of the Congo": "Africa",
+    "Denmark": "Europe",
+    "Djibouti": "Africa",
+    "Dominica": "North America",
+    "Dominican Republic": "North America",
+    "Ecuador": "South America",
+    "Egypt": "Africa",
+    "El Salvador": "North America",
+    "Equatorial Guinea": "Africa",
+    "Eritrea": "Africa",
+    "Estonia": "Europe",
+    "Eswatini": "Africa",
+    "Ethiopia": "Africa",
+    "Fiji": "Oceania",
+    "Finland": "Europe",
+    "France": "Europe",
+    "Gabon": "Africa",
+    "Gambia": "Africa",
+    "Georgia": "Asia",
+    "Germany": "Europe",
+    "Ghana": "Africa",
+    "Greece": "Europe",
+    "Grenada": "North America",
+    "Guam": "Oceania",
+    "Guatemala": "North America",
+    "Guinea": "Africa",
+    "Guinea-Bissau": "Africa",
+    "Guyana": "South America",
+    "Haiti": "North America",
+    "Honduras": "North America",
+    "Hungary": "Europe",
+    "Iceland": "Europe",
+    "India": "Asia",
+    "Indonesia": "Asia",
+    "Iran": "Asia",
+    "Iraq": "Asia",
+    "Ireland": "Europe",
+    "Israel": "Asia",
+    "Italy": "Europe",
+    "Jamaica": "North America",
+    "Japan": "Asia",
+    "Jordan": "Asia",
+    "Kazakhstan": "Asia",
+    "Kenya": "Africa",
+    "Kiribati": "Oceania",
+    "Kuwait": "Asia",
+    "Kyrgyzstan": "Asia",
+    "Laos": "Asia",
+    "Latvia": "Europe",
+    "Lebanon": "Asia",
+    "Lesotho": "Africa",
+    "Liberia": "Africa",
+    "Libya": "Africa",
+    "Liechtenstein": "Europe",
+    "Lithuania": "Europe",
+    "Luxembourg": "Europe",
+    "Madagascar": "Africa",
+    "Malawi": "Africa",
+    "Malaysia": "Asia",
+    "Maldives": "Asia",
+    "Mali": "Africa",
+    "Malta": "Europe",
+    "Marshall Islands": "Oceania",
+    "Mauritania": "Africa",
+    "Mauritius": "Africa",
+    "Mexico": "North America",
+    "Micronesia": "Oceania",
+    "Moldova": "Europe",
+    "Monaco": "Europe",
+    "Mongolia": "Asia",
+    "Montenegro": "Europe",
+    "Morocco": "Africa",
+    "Mozambique": "Africa",
+    "Myanmar": "Asia",
+    "Namibia": "Africa",
+    "Nauru": "Oceania",
+    "Nepal": "Asia",
+    "Netherlands": "Europe",
+    "New Zealand": "Oceania",
+    "Nicaragua": "North America",
+    "Niger": "Africa",
+    "Nigeria": "Africa",
+    "North Korea": "Asia",
+    "North Macedonia": "Europe",
+    "Northern Mariana Islands": "Oceania",
+    "Norway": "Europe",
+    "Oman": "Asia",
+    "Pakistan": "Asia",
+    "Palau": "Oceania",
+    "Palestine State": "Asia",
+    "Panama": "North America",
+    "Papua New Guinea": "Oceania",
+    "Paraguay": "South America",
+    "Peru": "South America",
+    "Philippines": "Asia",
+    "Poland": "Europe",
+    "Portugal": "Europe",
+    "Puerto Rico": "North America",
+    "Qatar": "Asia",
+    "Romania": "Europe",
+    "Russia": "Asia",
+    "Rwanda": "Africa",
+    "Saint Kitts and Nevis": "North America",
+    "Saint Lucia": "North America",
+    "Saint Vincent and the Grenadines": "North America",
+    "Samoa": "Oceania",
+    "San Marino": "Europe",
+    "Sao Tome and Principe": "Africa",
+    "Saudi Arabia": "Asia",
+    "Senegal": "Africa",
+    "Serbia": "Europe",
+    "Seychelles": "Africa",
+    "Sierra Leone": "Africa",
+    "Singapore": "Asia",
+    "Slovakia": "Europe",
+    "Slovenia": "Europe",
+    "Solomon Islands": "Oceania",
+    "Somalia": "Africa",
+    "South Africa": "Africa",
+    "South Korea": "Asia",
+    "South Sudan": "Africa",
+    "Spain": "Europe",
+    "Sri Lanka": "Asia",
+    "Sudan": "Africa",
+    "Suriname": "South America",
+    "Sweden": "Europe",
+    "Switzerland": "Europe",
+    "Syria": "Asia",
+    "Taiwan": "Asia",
+    "Tajikistan": "Asia",
+    "Tanzania": "Africa",
+    "Thailand": "Asia",
+    "Timor-Leste": "Oceania",
+    "Togo": "Africa",
+    "Tonga": "Oceania",
+    "Trinidad and Tobago": "North America",
+    "Tunisia": "Africa",
+    "Turkey": "Asia",
+    "Turkmenistan": "Asia",
+    "Tuvalu": "Oceania",
+    "Uganda": "Africa",
+    "Ukraine": "Europe",
+    "United Arab Emirates": "Asia",
+    "United Kingdom": "Europe",
+    "United States of America": "North America",
+    "United States": "North America",
+    "Uruguay": "South America",
+    "Uzbekistan": "Asia",
+    "Vanuatu": "Oceania",
+    "Vatican City": "Europe",
+    "Venezuela": "South America",
+    "Vietnam": "Asia",
+    "Yemen": "Asia",
+    "Zambia": "Africa",
+    "Zimbabwe": "Africa"
+  };
   var root_1$1 = /* @__PURE__ */ from_html(`<div class="error svelte-rfbclr"> </div>`);
   var root$3 = /* @__PURE__ */ from_html(`<div class="hint-panel svelte-rfbclr"><header class="svelte-rfbclr"><strong>Hint</strong> <button class="close svelte-rfbclr">×</button></header> <div><label>Country <input class="svelte-rfbclr"/></label></div> <div><label>Meta type <input class="svelte-rfbclr"/></label></div> <div><label>Description <textarea rows="2" class="svelte-rfbclr"></textarea></label></div> <!> <button>Submit</button></div>`);
   function HintPanel($$anchor, $$props) {
@@ -4815,6 +5050,7 @@
     let description = /* @__PURE__ */ mutable_source("");
     let image_url = "";
     let error = /* @__PURE__ */ mutable_source("");
+    let continent = /* @__PURE__ */ mutable_source("");
     const fallbackMetaTypes = [
       "bollard",
       "car",
@@ -4896,6 +5132,7 @@
           },
           data: JSON.stringify({
             country: get(country),
+            continent: get(continent),
             meta_type: get(meta_type),
             description: get(description),
             image_url
@@ -4906,6 +5143,7 @@
           set(meta_type, "");
           set(description, "");
           image_url = "";
+          set(continent, "");
           set(error, "");
         } else {
           set(error, `Failed to submit: ${res.status} ${res.responseText}`);
@@ -4914,6 +5152,10 @@
         set(error, `Failed to submit: ${e instanceof Error ? e.message : e}`);
       }
     }
+    legacy_pre_effect(() => get(country), () => {
+      set(continent, countryContinents[get(country)] || "");
+    });
+    legacy_pre_effect_reset();
     init();
     var div = root$3();
     var header = child(div);
