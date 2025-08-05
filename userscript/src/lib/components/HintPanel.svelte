@@ -1,8 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { GM_xmlhttpRequest } from '$';
+  import { countryNames } from '../../../../apps/api/src/lib/userscript/constants';
+
   const SUPABASE_URL = 'https://kacuunztbvznzhfsyfgp.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthY3V1bnp0YnZ6bnpoZnN5ZmdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxODY0NjEsImV4cCI6MjA2OTc2MjQ2MX0.VsC1HLOG413lXABUn4Sfv9c_arN06IxH9EXIdn-fzj4';
+  const SUPABASE_KEY =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthY3V1bnp0YnZ6bnpoZnN5ZmdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxODY0NjEsImV4cCI6MjA2OTc2MjQ2MX0.VsC1HLOG413lXABUn4Sfv9c_arN06IxH9EXIdn-fzj4';
 
   let country = '';
   let meta_type = '';
@@ -10,25 +13,57 @@
   let image_url = '';
   let error = '';
 
-  const metaTypes = ['bollard', 'car', 'sign', 'language', 'generation', 'antenna', 'coverage'];
+  const fallbackMetaTypes = ['bollard', 'car', 'sign', 'language', 'generation', 'antenna', 'coverage'];
+  let metaTypes: string[] = [];
 
-  onMount(() => {
+  onMount(async () => {
+    detectDescription();
     detectCountry();
+    await loadMetaTypes();
     detectMetaType();
     detectImage();
   });
+
+  function detectDescription() {
+    description = document.querySelector('.geometa-note')?.textContent?.trim() || '';
+  }
 
   function detectCountry() {
     const flag = document.querySelector('[class*="result-layout_flag"] img, img.flag');
     const alt = flag?.getAttribute('alt')?.trim();
     if (alt) {
       country = alt;
+      return;
+    }
+    const note = description.toLowerCase();
+    const found = countryNames.find((c) => note.includes(c.toLowerCase()));
+    if (found) {
+      country = found;
+    }
+  }
+
+  async function loadMetaTypes() {
+    try {
+      const res = await gmRequest({
+        method: 'GET',
+        url: `${SUPABASE_URL}/rest/v1/meta_types?select=name`,
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      if (res.status >= 200 && res.status < 300) {
+        metaTypes = JSON.parse(res.responseText).map((t: any) => t.name.toLowerCase());
+      }
+    } catch (e) {
+      // ignore fetch errors and rely on fallbackMetaTypes
     }
   }
 
   function detectMetaType() {
-    const note = document.querySelector('.geometa-note')?.textContent?.toLowerCase() || '';
-    const found = metaTypes.find((t) => note.includes(t));
+    const note = description.toLowerCase();
+    const types = metaTypes.length ? metaTypes : fallbackMetaTypes;
+    const found = types.find((t) => note.includes(t));
     if (found) {
       meta_type = found;
     }
@@ -69,10 +104,10 @@
         image_url = '';
         error = '';
       } else {
-        error = 'Failed to submit';
+        error = `Failed to submit: ${res.status} ${res.responseText}`;
       }
     } catch (e) {
-      error = 'Failed to submit';
+      error = `Failed to submit: ${e instanceof Error ? e.message : e}`;
     }
   }
 </script>

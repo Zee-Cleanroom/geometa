@@ -4602,6 +4602,208 @@
     pop();
   }
   delegate(["click"]);
+  const countryNames = [
+    "Afghanistan",
+    "Albania",
+    "Algeria",
+    "Andorra",
+    "Angola",
+    "Argentina",
+    "Armenia",
+    "Australia",
+    "Austria",
+    "Azerbaijan",
+    "Bahamas",
+    "Bahrain",
+    "Bangladesh",
+    "Barbados",
+    "Belarus",
+    "Belgium",
+    "Belize",
+    "Benin",
+    "Bhutan",
+    "Bolivia",
+    "Bosnia and Herzegovina",
+    "Botswana",
+    "Brazil",
+    "Brunei",
+    "Bulgaria",
+    "Burkina Faso",
+    "Burundi",
+    "Cabo Verde",
+    "Cambodia",
+    "Cameroon",
+    "Canada",
+    "Central African Republic",
+    "Chad",
+    "Chile",
+    "China",
+    "Colombia",
+    "Comoros",
+    "Congo",
+    "Costa Rica",
+    "Croatia",
+    "Cuba",
+    "Curacao",
+    "Cyprus",
+    "Czechia",
+    "Christmas Island",
+    "Democratic Republic of the Congo",
+    "Denmark",
+    "Djibouti",
+    "Dominica",
+    "Dominican Republic",
+    "Ecuador",
+    "Egypt",
+    "El Salvador",
+    "Equatorial Guinea",
+    "Eritrea",
+    "Estonia",
+    "Eswatini",
+    "Ethiopia",
+    "Fiji",
+    "Finland",
+    "France",
+    "Gabon",
+    "Gambia",
+    "Georgia",
+    "Germany",
+    "Ghana",
+    "Greece",
+    "Grenada",
+    "Guam",
+    "Guatemala",
+    "Guinea",
+    "Guinea-Bissau",
+    "Guyana",
+    "Haiti",
+    "Honduras",
+    "Hungary",
+    "Iceland",
+    "India",
+    "Indonesia",
+    "Iran",
+    "Iraq",
+    "Ireland",
+    "Israel",
+    "Italy",
+    "Jamaica",
+    "Japan",
+    "Jordan",
+    "Kazakhstan",
+    "Kenya",
+    "Kiribati",
+    "Kuwait",
+    "Kyrgyzstan",
+    "Laos",
+    "Latvia",
+    "Lebanon",
+    "Lesotho",
+    "Liberia",
+    "Libya",
+    "Liechtenstein",
+    "Lithuania",
+    "Luxembourg",
+    "Madagascar",
+    "Malawi",
+    "Malaysia",
+    "Maldives",
+    "Mali",
+    "Malta",
+    "Marshall Islands",
+    "Mauritania",
+    "Mauritius",
+    "Mexico",
+    "Micronesia",
+    "Moldova",
+    "Monaco",
+    "Mongolia",
+    "Montenegro",
+    "Morocco",
+    "Mozambique",
+    "Myanmar",
+    "Namibia",
+    "Nauru",
+    "Nepal",
+    "Netherlands",
+    "New Zealand",
+    "Nicaragua",
+    "Niger",
+    "Nigeria",
+    "North Korea",
+    "North Macedonia",
+    "Northern Mariana Islands",
+    "Norway",
+    "Oman",
+    "Pakistan",
+    "Palau",
+    "Palestine State",
+    "Panama",
+    "Papua New Guinea",
+    "Paraguay",
+    "Peru",
+    "Philippines",
+    "Poland",
+    "Portugal",
+    "Puerto Rico",
+    "Qatar",
+    "Romania",
+    "Russia",
+    "Rwanda",
+    "Saint Kitts and Nevis",
+    "Saint Lucia",
+    "Saint Vincent and the Grenadines",
+    "Samoa",
+    "San Marino",
+    "Sao Tome and Principe",
+    "Saudi Arabia",
+    "Senegal",
+    "Serbia",
+    "Seychelles",
+    "Sierra Leone",
+    "Singapore",
+    "Slovakia",
+    "Slovenia",
+    "Solomon Islands",
+    "Somalia",
+    "South Africa",
+    "South Korea",
+    "South Sudan",
+    "Spain",
+    "Sri Lanka",
+    "Sudan",
+    "Suriname",
+    "Sweden",
+    "Switzerland",
+    "Syria",
+    "Taiwan",
+    "Tajikistan",
+    "Tanzania",
+    "Thailand",
+    "Timor-Leste",
+    "Togo",
+    "Tonga",
+    "Trinidad and Tobago",
+    "Tunisia",
+    "Turkey",
+    "Turkmenistan",
+    "Tuvalu",
+    "Uganda",
+    "Ukraine",
+    "United Arab Emirates",
+    "United Kingdom",
+    "United States of America",
+    "United States",
+    "Uruguay",
+    "Uzbekistan",
+    "Vanuatu",
+    "Vatican City",
+    "Venezuela",
+    "Vietnam",
+    "Yemen",
+    "Zambia",
+    "Zimbabwe"
+  ];
   var root_1$1 = /* @__PURE__ */ from_html(`<div class="error svelte-rfbclr"> </div>`);
   var root$3 = /* @__PURE__ */ from_html(`<div class="hint-panel svelte-rfbclr"><header class="svelte-rfbclr"><strong>Hint</strong> <button class="close svelte-rfbclr">×</button></header> <div><label>Country <input class="svelte-rfbclr"/></label></div> <div><label>Meta type <input class="svelte-rfbclr"/></label></div> <div><label>Description <textarea rows="2" class="svelte-rfbclr"></textarea></label></div> <!> <button>Submit</button></div>`);
   function HintPanel($$anchor, $$props) {
@@ -4613,7 +4815,7 @@
     let description = /* @__PURE__ */ mutable_source("");
     let image_url = "";
     let error = /* @__PURE__ */ mutable_source("");
-    const metaTypes = [
+    const fallbackMetaTypes = [
       "bollard",
       "car",
       "sign",
@@ -4622,23 +4824,52 @@
       "antenna",
       "coverage"
     ];
-    onMount(() => {
+    let metaTypes = [];
+    onMount(async () => {
+      detectDescription();
       detectCountry();
+      await loadMetaTypes();
       detectMetaType();
       detectImage();
     });
+    function detectDescription() {
+      var _a2, _b;
+      set(description, ((_b = (_a2 = document.querySelector(".geometa-note")) == null ? void 0 : _a2.textContent) == null ? void 0 : _b.trim()) || "");
+    }
     function detectCountry() {
       var _a2;
       const flag = document.querySelector('[class*="result-layout_flag"] img, img.flag');
       const alt = (_a2 = flag == null ? void 0 : flag.getAttribute("alt")) == null ? void 0 : _a2.trim();
       if (alt) {
         set(country, alt);
+        return;
+      }
+      const note = get(description).toLowerCase();
+      const found = countryNames.find((c) => note.includes(c.toLowerCase()));
+      if (found) {
+        set(country, found);
+      }
+    }
+    async function loadMetaTypes() {
+      try {
+        const res = await gmRequest({
+          method: "GET",
+          url: `${SUPABASE_URL}/rest/v1/meta_types?select=name`,
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`
+          }
+        });
+        if (res.status >= 200 && res.status < 300) {
+          metaTypes = JSON.parse(res.responseText).map((t) => t.name.toLowerCase());
+        }
+      } catch (e) {
       }
     }
     function detectMetaType() {
-      var _a2, _b;
-      const note = ((_b = (_a2 = document.querySelector(".geometa-note")) == null ? void 0 : _a2.textContent) == null ? void 0 : _b.toLowerCase()) || "";
-      const found = metaTypes.find((t) => note.includes(t));
+      const note = get(description).toLowerCase();
+      const types = metaTypes.length ? metaTypes : fallbackMetaTypes;
+      const found = types.find((t) => note.includes(t));
       if (found) {
         set(meta_type, found);
       }
@@ -4677,10 +4908,10 @@
           image_url = "";
           set(error, "");
         } else {
-          set(error, "Failed to submit");
+          set(error, `Failed to submit: ${res.status} ${res.responseText}`);
         }
       } catch (e) {
-        set(error, "Failed to submit");
+        set(error, `Failed to submit: ${e instanceof Error ? e.message : e}`);
       }
     }
     init();
