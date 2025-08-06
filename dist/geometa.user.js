@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GeoGuessr Learnable Meta
 // @namespace    geometa
-// @version      0.89
+// @version      0.90
 // @author       monkey
 // @description  UserScript for GeoGuessr Learnable Meta maps
 // @icon         https://learnablemeta.com/favicon.png
@@ -5492,6 +5492,7 @@
   }
   function changelog() {
     return [
+      { "0.90": "Resolve dist merge conflict markers" },
       { "0.89": "Add version counter and Supabase status indicator" },
       { "0.88": "Updated framework version for bug-fixes" },
       { "0.87": "Added ability to view metas on breakdown screen" },
