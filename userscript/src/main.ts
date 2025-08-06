@@ -7,6 +7,7 @@ import { initLocationsUpload } from './lib/locationsUpload';
 
 function changelog() {
   return [
+    {'0.92': 'Clear leftover merge conflicts'},
     {'0.91': 'Restore continent field in hint panel'},
     {'0.90': 'Resolve dist merge conflict markers'},
     {'0.89': 'Add version counter and Supabase status indicator'},

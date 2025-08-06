@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GeoGuessr Learnable Meta
 // @namespace    geometa
-// @version      0.91
+// @version      0.92
 // @author       monkey
 // @description  UserScript for GeoGuessr Learnable Meta maps
 // @icon         https://learnablemeta.com/favicon.png
@@ -5495,6 +5495,7 @@
   }
   function changelog() {
     return [
+      { "0.92": "Clear leftover merge conflicts" },
       { "0.91": "Restore continent field in hint panel" },
       { "0.90": "Resolve dist merge conflict markers" },
       { "0.89": "Add version counter and Supabase status indicator" },
