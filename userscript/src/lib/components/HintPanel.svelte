@@ -14,8 +14,12 @@
   let meta_type = '';
   let description = '';
   let image_url = '';
-  let error = '';
   let continent = '';
+  let submitError = '';
+  let validationError = '';
+  let duplicate = false;
+  let status = 'Not Added';
+  let isValid = false;
 
   const META_TYPE_OPTIONS = [
     'antenna',
@@ -70,7 +74,6 @@
       setTimeout(async () => {
         await waitForMetaContent();
         console.debug('[Autofill] Starting...');
-        detectDescription();
         detectCountry();
         detectMetaType();
         detectImage();
@@ -102,10 +105,12 @@
   }
 
   $: continent = countryContinents[country] || '';
-
-  function detectDescription() {
-    description = document.querySelector('.geometa-note')?.textContent?.trim() || '';
-  }
+  $:
+    validationError =
+      !country || !continent || !meta_type || !description
+        ? 'All fields are required'
+        : '';
+  $: isValid = !validationError && !duplicate;
 
   function detectCountry() {
     const headerEl = document.querySelector<HTMLHeadingElement>('strong.svelte-a3mhc8');
@@ -186,7 +191,11 @@
 
   function detectImage() {
     const img = document.querySelector('[class*="result-layout_root"] img.responsive-image');
-    image_url = img?.getAttribute('src') || '';
+    const src = img?.getAttribute('src') || '';
+    if (src && src !== image_url) {
+      image_url = src;
+      checkDuplicate();
+    }
   }
 
   function gmRequest(options: any): Promise<any> {
@@ -199,7 +208,35 @@
     });
   }
 
+  async function checkDuplicate() {
+    try {
+      if (!image_url) {
+        duplicate = false;
+        status = 'Not Added';
+        return;
+      }
+      const res = await gmRequest({
+        method: 'GET',
+        url: `${SUPABASE_URL}/rest/v1/hints?select=id&image_url=eq.${encodeURIComponent(
+          image_url
+        )}`,
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      const data = JSON.parse(res.responseText);
+      duplicate = Array.isArray(data) && data.length > 0;
+      status = duplicate ? 'Already in Supabase' : 'Not Added';
+    } catch (e) {
+      duplicate = false;
+      status = 'Not Added';
+    }
+  }
+
   async function submit() {
+    if (!isValid) return;
+    submitError = '';
     try {
       detectImage();
       const res = await gmRequest({
@@ -218,12 +255,13 @@
         description = '';
         image_url = '';
         continent = '';
-        error = '';
+        submitError = '';
+        detectImage();
       } else {
-        error = `Failed to submit: ${res.status} ${res.responseText}`;
+        submitError = `Failed to submit: ${res.status} ${res.responseText}`;
       }
     } catch (e) {
-      error = `Failed to submit: ${e instanceof Error ? e.message : e}`;
+      submitError = `Failed to submit: ${e instanceof Error ? e.message : e}`;
     }
   }
 </script>
@@ -269,10 +307,16 @@
       >Description <textarea rows="2" bind:value={description} on:keydown|stopPropagation></textarea
       ></label>
   </div>
-  {#if error}
-    <div class="error">{error}</div>
+  {#if validationError}
+    <div class="error">{validationError}</div>
   {/if}
-  <button on:click={submit}>Submit</button>
+  {#if submitError}
+    <div class="error">{submitError}</div>
+  {/if}
+  <div class="actions">
+    <button on:click={submit} disabled={!isValid}>Submit</button>
+    <span class="status" style="color: {duplicate ? '#f88' : '#8f8'}">{status}</span>
+  </div>
 </div>
 
 <style>
@@ -312,5 +356,14 @@
     border: none;
     cursor: pointer;
     color: #fff;
+  }
+  .hint-panel .actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .hint-panel .status {
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
   }
 </style>
