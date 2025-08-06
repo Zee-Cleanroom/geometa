@@ -2059,6 +2059,10 @@
       active_effect = previous_effect;
     }
   }
+  async function tick() {
+    await Promise.resolve();
+    flushSync();
+  }
   function get(signal) {
     var flags = signal.f;
     var is_derived = (flags & DERIVED) !== 0;
@@ -3569,11 +3573,11 @@
         t: () => t2
       };
     }
-    const { delay = 0, css, tick, easing = linear$1 } = options;
+    const { delay = 0, css, tick: tick2, easing = linear$1 } = options;
     var keyframes = [];
     if (is_intro && counterpart === void 0) {
-      if (tick) {
-        tick(0, 1);
+      if (tick2) {
+        tick2(0, 1);
       }
       if (css) {
         var styles = css_to_keyframe(css(0, 1));
@@ -3614,11 +3618,11 @@
           );
           return t1 + delta * easing(time / duration);
         };
-        if (tick) {
+        if (tick2) {
           loop(() => {
             if (animation.playState !== "running") return false;
             var t3 = get_t();
-            tick(t3, 1 - t3);
+            tick2(t3, 1 - t3);
             return true;
           });
         }
@@ -3626,7 +3630,7 @@
       animation = element.animate(keyframes2, { duration, fill: "forwards" });
       animation.onfinish = () => {
         get_t = () => t2;
-        tick == null ? void 0 : tick(t2, 1 - t2);
+        tick2 == null ? void 0 : tick2(t2, 1 - t2);
         on_finish();
       };
     };
@@ -3643,7 +3647,7 @@
       },
       reset: () => {
         if (t2 === 0) {
-          tick == null ? void 0 : tick(1, 0);
+          tick2 == null ? void 0 : tick2(1, 0);
         }
       },
       t: () => get_t()
@@ -5217,7 +5221,8 @@
       if (!KEYWORD_MAP[t]) KEYWORD_MAP[t] = [t];
       else KEYWORD_MAP[t].push(t);
     });
-    onMount(() => {
+    onMount(async () => {
+      await tick();
       detectDescription();
       detectCountry();
       detectMetaType();

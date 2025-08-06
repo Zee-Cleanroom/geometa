@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { GM_xmlhttpRequest } from '$';
   import {
     countryNames,
@@ -61,7 +61,12 @@
     else KEYWORD_MAP[t].push(t);
   });
 
-  onMount(() => {
+  // Run all auto-detection logic only after the panel has been mounted in the DOM
+  // so that we can safely query surrounding elements.
+  onMount(async () => {
+    // Wait for the next microtask to ensure the panel has been attached
+    // to the document before attempting to query external elements.
+    await tick();
     detectDescription();
     detectCountry();
     detectMetaType();
