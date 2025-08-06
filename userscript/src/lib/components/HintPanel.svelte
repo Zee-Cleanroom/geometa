@@ -5,6 +5,7 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthY3V1bnp0YnZ6bnpoZnN5ZmdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxODY0NjEsImV4cCI6MjA2OTc2MjQ2MX0.VsC1HLOG413lXABUn4Sfv9c_arN06IxH9EXIdn-fzj4';
 
   let country = '';
+  let continent = '';
   let meta_type = '';
   let description = '';
   let image_url = '';
@@ -97,10 +98,11 @@
           Authorization: `Bearer ${SUPABASE_KEY}`,
           'Content-Type': 'application/json'
         },
-        data: JSON.stringify({ country, meta_type, description, image_url })
+        data: JSON.stringify({ country, continent, meta_type, description, image_url })
       });
       if (res.status >= 200 && res.status < 300) {
         country = '';
+        continent = '';
         meta_type = '';
         description = '';
         image_url = '';
@@ -169,6 +171,9 @@
   </header>
   <div>
     <label>Country <input bind:value={country} on:keydown|stopPropagation /></label>
+  </div>
+  <div>
+    <label>Continent <input bind:value={continent} on:keydown|stopPropagation /></label>
   </div>
   <div>
     <label>Meta type <input bind:value={meta_type} on:keydown|stopPropagation /></label>

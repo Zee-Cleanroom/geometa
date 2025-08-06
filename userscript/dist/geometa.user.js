@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GeoGuessr Learnable Meta
 // @namespace    geometa
-// @version      0.90
+// @version      0.91
 // @author       monkey
 // @description  UserScript for GeoGuessr Learnable Meta maps
 // @icon         https://learnablemeta.com/favicon.png
@@ -4608,12 +4608,13 @@
   }
   delegate(["click"]);
   var root_1$1 = /* @__PURE__ */ from_html(`<div class="error svelte-a2wp6"> </div>`);
-  var root$3 = /* @__PURE__ */ from_html(`<div class="hint-panel svelte-a2wp6"><header class="svelte-a2wp6"><strong>Hint</strong> <button class="close svelte-a2wp6">×</button></header> <div><label>Country <input class="svelte-a2wp6"/></label></div> <div><label>Meta type <input class="svelte-a2wp6"/></label></div> <div><label>Description <textarea rows="2" class="svelte-a2wp6"></textarea></label></div> <!> <div class="actions svelte-a2wp6"><button>Submit</button> <span> </span></div></div>`);
+  var root$3 = /* @__PURE__ */ from_html(`<div class="hint-panel svelte-a2wp6"><header class="svelte-a2wp6"><strong>Hint</strong> <button class="close svelte-a2wp6">×</button></header> <div><label>Country <input class="svelte-a2wp6"/></label></div> <div><label>Continent <input class="svelte-a2wp6"/></label></div> <div><label>Meta type <input class="svelte-a2wp6"/></label></div> <div><label>Description <textarea rows="2" class="svelte-a2wp6"></textarea></label></div> <!> <div class="actions svelte-a2wp6"><button>Submit</button> <span> </span></div></div>`);
   function HintPanel($$anchor, $$props) {
     push($$props, false);
     const SUPABASE_URL = "https://kacuunztbvznzhfsyfgp.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthY3V1bnp0YnZ6bnpoZnN5ZmdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxODY0NjEsImV4cCI6MjA2OTc2MjQ2MX0.VsC1HLOG413lXABUn4Sfv9c_arN06IxH9EXIdn-fzj4";
     let country = /* @__PURE__ */ mutable_source("");
+    let continent = /* @__PURE__ */ mutable_source("");
     let meta_type = /* @__PURE__ */ mutable_source("");
     let description = /* @__PURE__ */ mutable_source("");
     let image_url = "";
@@ -4706,6 +4707,7 @@
           },
           data: JSON.stringify({
             country: get(country),
+            continent: get(continent),
             meta_type: get(meta_type),
             description: get(description),
             image_url
@@ -4713,6 +4715,7 @@
         });
         if (res.status >= 200 && res.status < 300) {
           set(country, "");
+          set(continent, "");
           set(meta_type, "");
           set(description, "");
           image_url = "";
@@ -4737,21 +4740,24 @@
     var input_1 = sibling(child(label_1));
     var div_3 = sibling(div_2, 2);
     var label_2 = child(div_3);
-    var textarea = sibling(child(label_2));
-    var node = sibling(div_3, 2);
+    var input_2 = sibling(child(label_2));
+    var div_4 = sibling(div_3, 2);
+    var label_3 = child(div_4);
+    var textarea = sibling(child(label_3));
+    var node = sibling(div_4, 2);
     {
       var consequent = ($$anchor2) => {
-        var div_4 = root_1$1();
-        var text = child(div_4);
+        var div_5 = root_1$1();
+        var text = child(div_5);
         template_effect(() => set_text(text, get(error)));
-        append($$anchor2, div_4);
+        append($$anchor2, div_5);
       };
       if_block(node, ($$render) => {
         if (get(error)) $$render(consequent);
       });
     }
-    var div_5 = sibling(node, 2);
-    var button_1 = child(div_5);
+    var div_6 = sibling(node, 2);
+    var button_1 = child(div_6);
     var span = sibling(button_1, 2);
     var text_1 = child(span);
     template_effect(() => set_text(text_1, get(inSupabase) ? "in Supabase" : "not in Supabase"));
@@ -4763,8 +4769,12 @@
     event("keydown", input, stopPropagation(function($$arg) {
       bubble_event.call(this, $$props, $$arg);
     }));
-    bind_value(input_1, () => get(meta_type), ($$value) => set(meta_type, $$value));
+    bind_value(input_1, () => get(continent), ($$value) => set(continent, $$value));
     event("keydown", input_1, stopPropagation(function($$arg) {
+      bubble_event.call(this, $$props, $$arg);
+    }));
+    bind_value(input_2, () => get(meta_type), ($$value) => set(meta_type, $$value));
+    event("keydown", input_2, stopPropagation(function($$arg) {
       bubble_event.call(this, $$props, $$arg);
     }));
     bind_value(textarea, () => get(description), ($$value) => set(description, $$value));
@@ -5492,6 +5502,7 @@
   }
   function changelog() {
     return [
+      { "0.91": "Restore continent field in hint panel" },
       { "0.90": "Resolve dist merge conflict markers" },
       { "0.89": "Add version counter and Supabase status indicator" },
       { "0.88": "Updated framework version for bug-fixes" },
