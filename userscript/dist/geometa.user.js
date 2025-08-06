@@ -5224,16 +5224,36 @@
     });
     onMount(async () => {
       await tick();
-      setTimeout(
-        () => {
-          detectDescription();
-          detectCountry();
-          detectMetaType();
-          detectImage();
-        },
-        0
-      );
+      requestAnimationFrame(() => {
+        setTimeout(
+          async () => {
+            await waitForMetaContent();
+            console.debug("[Autofill] Starting...");
+            detectDescription();
+            detectCountry();
+            detectMetaType();
+            detectImage();
+          },
+          0
+        );
+      });
     });
+    function waitForMetaContent() {
+      return new Promise((resolve) => {
+        const hasContent = () => document.querySelector("strong.svelte-a3mhc8") || document.querySelector(".geometa-note.svelte-a3mhc8") || document.querySelector('[class*="result-layout_root"] img.responsive-image');
+        if (hasContent()) {
+          resolve();
+          return;
+        }
+        const observer = new MutationObserver(() => {
+          if (hasContent()) {
+            observer.disconnect();
+            resolve();
+          }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+      });
+    }
     function detectDescription() {
       var _a2, _b;
       set(description, ((_b = (_a2 = document.querySelector(".geometa-note")) == null ? void 0 : _a2.textContent) == null ? void 0 : _b.trim()) || "");

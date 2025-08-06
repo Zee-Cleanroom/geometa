@@ -61,17 +61,45 @@
     else metaTypeMap[t].push(t);
   });
 
-  // Run all auto-detection logic only after the panel has been mounted in the DOM
-  // so that we can safely query surrounding elements.
+  // Wait for the panel and Learnable Meta content to be fully rendered
+  // before attempting any auto-detection.
   onMount(async () => {
     await tick();
-    setTimeout(() => {
-      detectDescription();
-      detectCountry();
-      detectMetaType();
-      detectImage();
-    }, 0);
+
+    requestAnimationFrame(() => {
+      setTimeout(async () => {
+        await waitForMetaContent();
+        console.debug('[Autofill] Starting...');
+        detectDescription();
+        detectCountry();
+        detectMetaType();
+        detectImage();
+      }, 0);
+    });
   });
+
+  function waitForMetaContent(): Promise<void> {
+    return new Promise((resolve) => {
+      const hasContent = () =>
+        document.querySelector('strong.svelte-a3mhc8') ||
+        document.querySelector('.geometa-note.svelte-a3mhc8') ||
+        document.querySelector('[class*="result-layout_root"] img.responsive-image');
+
+      if (hasContent()) {
+        resolve();
+        return;
+      }
+
+      const observer = new MutationObserver(() => {
+        if (hasContent()) {
+          observer.disconnect();
+          resolve();
+        }
+      });
+
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
+  }
 
   $: continent = countryContinents[country] || '';
 
