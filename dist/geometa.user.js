@@ -3812,7 +3812,7 @@
     var div = root$6();
     append($$anchor, div);
   }
-  var root_1$2 = /* @__PURE__ */ from_html(`<img class="fi svelte-7lhsry"/>`);
+  var root_1$1 = /* @__PURE__ */ from_html(`<img class="fi svelte-7lhsry"/>`);
   function CountryFlag($$anchor, $$props) {
     const countryCodes = {
       Afghanistan: "af",
@@ -4020,7 +4020,7 @@
     var node = first_child(fragment);
     {
       var consequent = ($$anchor2) => {
-        var img = root_1$2();
+        var img = root_1$1();
         template_effect(
           ($0) => {
             set_attribute(img, "alt", $$props.countryName);
@@ -4607,8 +4607,7 @@
     pop();
   }
   delegate(["click"]);
-  var root_1$1 = /* @__PURE__ */ from_html(`<div class="error svelte-a2wp6"> </div>`);
-  var root$3 = /* @__PURE__ */ from_html(`<div class="hint-panel svelte-a2wp6"><header class="svelte-a2wp6"><strong>Hint</strong> <button class="close svelte-a2wp6">×</button></header> <div><label>Country <input class="svelte-a2wp6"/></label></div> <div><label>Continent <input class="svelte-a2wp6"/></label></div> <div><label>Meta type <input class="svelte-a2wp6"/></label></div> <div><label>Description <textarea rows="2" class="svelte-a2wp6"></textarea></label></div> <!> <div class="actions svelte-a2wp6"><button>Submit</button> <span> </span></div></div>`);
+  var root$3 = /* @__PURE__ */ from_html(`<div class="hint-panel svelte-a2wp6"><header class="svelte-a2wp6"><strong>Hint</strong> <button class="close svelte-a2wp6">×</button></header> <div><label>Country <input class="svelte-a2wp6"/></label></div> <div><label>Continent <input class="svelte-a2wp6"/></label></div> <div><label>Meta type <input class="svelte-a2wp6"/></label></div> <div><label>Description <textarea rows="2" class="svelte-a2wp6"></textarea></label></div> <div class="error svelte-a2wp6"> </div> <div class="actions svelte-a2wp6"><button>Submit</button> <span> </span></div></div>`);
   function HintPanel($$anchor, $$props) {
     push($$props, false);
     const SUPABASE_URL = "https://kacuunztbvznzhfsyfgp.supabase.co";
@@ -4744,23 +4743,17 @@
     var div_4 = sibling(div_3, 2);
     var label_3 = child(div_4);
     var textarea = sibling(child(label_3));
-    var node = sibling(div_4, 2);
-    {
-      var consequent = ($$anchor2) => {
-        var div_5 = root_1$1();
-        var text = child(div_5);
-        template_effect(() => set_text(text, get(error)));
-        append($$anchor2, div_5);
-      };
-      if_block(node, ($$render) => {
-        if (get(error)) $$render(consequent);
-      });
-    }
-    var div_6 = sibling(node, 2);
+    var div_5 = sibling(div_4, 2);
+    var text = child(div_5);
+    var div_6 = sibling(div_5, 2);
     var button_1 = child(div_6);
     var span = sibling(button_1, 2);
     var text_1 = child(span);
-    template_effect(() => set_text(text_1, get(inSupabase) ? "in Supabase" : "not in Supabase"));
+    template_effect(() => {
+      div_5.hidden = !get(error);
+      set_text(text, get(error));
+      set_text(text_1, get(inSupabase) ? "in Supabase" : "not in Supabase");
+    });
     event("click", button, () => {
       var _a2;
       return (_a2 = document.getElementById("geometa-hints")) == null ? void 0 : _a2.remove();

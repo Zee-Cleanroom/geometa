@@ -181,9 +181,7 @@
   <div>
     <label>Description <textarea rows="2" bind:value={description} on:keydown|stopPropagation></textarea></label>
   </div>
-  {#if error}
-    <div class="error">{error}</div>
-  {/if}
+  <div class="error" hidden={!error}>{error}</div>
   <div class="actions">
     <button on:click={submit}>Submit</button>
     <span>{inSupabase ? 'in Supabase' : 'not in Supabase'}</span>
