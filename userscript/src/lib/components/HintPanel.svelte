@@ -52,25 +52,25 @@
     'window'
   ];
 
-  const KEYWORD_MAP: Record<string, string[]> = {
+  const metaTypeMap: Record<string, string[]> = {
     'double-yellow': ['double yellow', 'yellow lines'],
     'road lines': ['road lines', 'yellow lines']
   };
   META_TYPE_OPTIONS.forEach((t) => {
-    if (!KEYWORD_MAP[t]) KEYWORD_MAP[t] = [t];
-    else KEYWORD_MAP[t].push(t);
+    if (!metaTypeMap[t]) metaTypeMap[t] = [t];
+    else metaTypeMap[t].push(t);
   });
 
   // Run all auto-detection logic only after the panel has been mounted in the DOM
   // so that we can safely query surrounding elements.
   onMount(async () => {
-    // Wait for the next microtask to ensure the panel has been attached
-    // to the document before attempting to query external elements.
     await tick();
-    detectDescription();
-    detectCountry();
-    detectMetaType();
-    detectImage();
+    setTimeout(() => {
+      detectDescription();
+      detectCountry();
+      detectMetaType();
+      detectImage();
+    }, 0);
   });
 
   $: continent = countryContinents[country] || '';
@@ -80,32 +80,79 @@
   }
 
   function detectCountry() {
-    const flag = document.querySelector('[class*="result-layout_flag"] img, img.flag');
-    const alt = flag?.getAttribute('alt')?.trim();
-    if (alt) {
-      country = alt;
+    const headerEl = document.querySelector<HTMLHeadingElement>('strong.svelte-a3mhc8');
+    const descriptionEl = document.querySelector<HTMLElement>('.geometa-note.svelte-a3mhc8');
+
+    const headerText = headerEl?.textContent?.trim().toLowerCase() ?? '';
+    const descriptionText = descriptionEl?.textContent?.trim().toLowerCase() ?? '';
+    const fullText = `${headerText} ${descriptionText}`;
+
+    console.debug('headerText:', headerText);
+    console.debug('descriptionText:', descriptionText);
+    console.debug('fullText:', fullText);
+
+    const countryDropdown = document.querySelector<HTMLSelectElement>('#geometa-country');
+    console.debug('countryDropdown exists:', !!countryDropdown);
+    console.debug(
+      'countryDropdown options:',
+      countryDropdown ? Array.from(countryDropdown.options).map((o) => o.value) : []
+    );
+
+    if (!countryDropdown) return;
+
+    const match = countryNames.find((c) => fullText.includes(c.toLowerCase()));
+    if (match) {
+      console.debug('matched keyword:', match);
+      countryDropdown.value = match;
+      countryDropdown.dispatchEvent(new Event('change', { bubbles: true }));
       return;
     }
-    const note = description.toLowerCase();
-    const found = countryNames.find((c) => note.includes(c.toLowerCase()));
-    if (found) {
-      country = found;
+
+    const img = Array.from(document.querySelectorAll('img[alt]')).find((i) => {
+      const alt = i.getAttribute('alt')?.trim().toLowerCase() ?? '';
+      return countryNames.some((c) => alt.includes(c.toLowerCase()));
+    });
+    if (img) {
+      const alt = img.getAttribute('alt')?.trim().toLowerCase() ?? '';
+      const kw = countryNames.find((c) => alt.includes(c.toLowerCase()));
+      if (kw) {
+        console.debug('matched keyword:', kw);
+        countryDropdown.value = kw;
+        countryDropdown.dispatchEvent(new Event('change', { bubbles: true }));
+      }
     }
   }
 
   function detectMetaType() {
-    const elements = document.querySelectorAll(
-      'strong.svelte-a3mhc8, .geometa-note.svelte-a3mhc8'
+    const headerEl = document.querySelector<HTMLHeadingElement>('strong.svelte-a3mhc8');
+    const descriptionEl = document.querySelector<HTMLElement>('.geometa-note.svelte-a3mhc8');
+
+    const headerText = headerEl?.textContent?.trim().toLowerCase() ?? '';
+    const descriptionText = descriptionEl?.textContent?.trim().toLowerCase() ?? '';
+    const fullText = `${headerText} ${descriptionText}`;
+
+    console.debug('headerText:', headerText);
+    console.debug('descriptionText:', descriptionText);
+    console.debug('fullText:', fullText);
+
+    const metaDropdown = document.querySelector<HTMLSelectElement>('#geometa-meta-type');
+    console.debug('metaDropdown exists:', !!metaDropdown);
+    console.debug(
+      'metaDropdown options:',
+      metaDropdown ? Array.from(metaDropdown.options).map((o) => o.value) : []
     );
-    let text = '';
-    elements.forEach((el) => {
-      text += ' ' + (el.textContent?.toLowerCase() || '');
-    });
-    for (const [type, keywords] of Object.entries(KEYWORD_MAP)) {
-      if (keywords.some((k) => text.includes(k))) {
-        meta_type = type;
-        break;
-      }
+
+    if (!metaDropdown) return;
+
+    const match = Object.entries(metaTypeMap).find(([, keywords]) =>
+      keywords.some((k) => fullText.includes(k))
+    );
+    if (match) {
+      const [type, keywords] = match;
+      const kw = keywords.find((k) => fullText.includes(k));
+      console.debug('matched keyword:', kw, '-> type:', type);
+      metaDropdown.value = type;
+      metaDropdown.dispatchEvent(new Event('change', { bubbles: true }));
     }
   }
 
@@ -153,6 +200,53 @@
   }
 </script>
 
+<div class="hint-panel">
+  <header>
+    <strong>Hint</strong>
+    <button class="close" on:click={() => document.getElementById('geometa-hints')?.remove()}
+      >×</button>
+  </header>
+  <div>
+    <label>
+      Country
+      <select
+        id="geometa-country"
+        bind:value={country}
+        on:keydown|stopPropagation
+        on:change|stopPropagation>
+        <option value=""></option>
+        {#each countryNames as c}
+          <option value={c}>{c}</option>
+        {/each}
+      </select>
+    </label>
+  </div>
+  <div>
+    <label>
+      Meta type
+      <select
+        id="geometa-meta-type"
+        bind:value={meta_type}
+        on:keydown|stopPropagation
+        on:change|stopPropagation>
+        <option value=""></option>
+        {#each META_TYPE_OPTIONS as t}
+          <option value={t}>{t}</option>
+        {/each}
+      </select>
+    </label>
+  </div>
+  <div>
+    <label
+      >Description <textarea rows="2" bind:value={description} on:keydown|stopPropagation></textarea
+      ></label>
+  </div>
+  {#if error}
+    <div class="error">{error}</div>
+  {/if}
+  <button on:click={submit}>Submit</button>
+</div>
+
 <style>
   .hint-panel {
     position: fixed;
@@ -164,10 +258,9 @@
     border: 1px solid #ccc;
     border-radius: 4px;
     z-index: 9999;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     max-width: 300px;
   }
-  .hint-panel input,
   .hint-panel textarea,
   .hint-panel select {
     width: 100%;
@@ -193,31 +286,3 @@
     color: #fff;
   }
 </style>
-
-<div class="hint-panel">
-  <header>
-    <strong>Hint</strong>
-    <button class="close" on:click={() => (document.getElementById('geometa-hints')?.remove())}>×</button>
-  </header>
-  <div>
-    <label>Country <input bind:value={country} on:keydown|stopPropagation /></label>
-  </div>
-  <div>
-    <label>
-      Meta type
-      <select bind:value={meta_type} on:keydown|stopPropagation on:change|stopPropagation>
-        <option value=""></option>
-        {#each META_TYPE_OPTIONS as t}
-          <option value={t}>{t}</option>
-        {/each}
-      </select>
-    </label>
-  </div>
-  <div>
-    <label>Description <textarea rows="2" bind:value={description} on:keydown|stopPropagation></textarea></label>
-  </div>
-  {#if error}
-    <div class="error">{error}</div>
-  {/if}
-  <button on:click={submit}>Submit</button>
-</div>
