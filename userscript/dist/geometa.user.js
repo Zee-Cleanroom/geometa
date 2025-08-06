@@ -5,8 +5,8 @@
 // @author       monkey
 // @description  UserScript for GeoGuessr Learnable Meta maps
 // @icon         https://learnablemeta.com/favicon.png
-// @downloadURL  https://github.com/likeon/geometa/raw/main/dist/geometa.user.js
-// @updateURL    https://github.com/likeon/geometa/raw/main/dist/geometa.user.js
+// @downloadURL  https://github.com/Zee-Cleanroom/geometa/raw/main/dist/geometa.user.js
+// @updateURL    https://github.com/Zee-Cleanroom/geometa/raw/main/dist/geometa.user.js
 // @match        *://*.geoguessr.com/*
 // @require      https://raw.githubusercontent.com/miraclewhips/geoguessr-event-framework/5e449d6b64c828fce5d2915772d61c7f95263e34/geoguessr-event-framework.js
 // @connect      learnablemeta.com
@@ -4655,6 +4655,19 @@
     async function submit() {
       try {
         detectImage();
+        const checkRes = await gmRequest({
+          method: "GET",
+          url: `${SUPABASE_URL}/rest/v1/hints?select=id&image_url=eq.${encodeURIComponent(image_url)}`,
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`
+          }
+        });
+        const existing = JSON.parse(checkRes.responseText);
+        if (existing.length > 0) {
+          set(error, "Hint already exists for this image URL");
+          return;
+        }
         const res = await gmRequest({
           method: "POST",
           url: `${SUPABASE_URL}/rest/v1/hints`,

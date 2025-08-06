@@ -72,13 +72,13 @@
             ><strong class="font-semibold text-foreground">Install the Userscript.</strong>
             Once you have the extension installed, you can install the userscript by clicking
             <a
-              href="https://github.com/likeon/geometa/raw/main/dist/geometa.user.js"
+              href="https://github.com/Zee-Cleanroom/geometa/raw/main/dist/geometa.user.js"
               target="_blank">this link</a
             >. Make sure to open new window with geoguessr after installing the script for first
             time.
             <p>
               The userscript is open-source and <a
-                href="https://github.com/likeon/geometa"
+                href="https://github.com/Zee-Cleanroom/geometa"
                 target="_blank">available on GitHub</a
               >.
             </p>
