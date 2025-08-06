@@ -16,16 +16,71 @@
   let image_url = '';
   let error = '';
   let continent = '';
+  let panelEl: HTMLDivElement;
 
-  const fallbackMetaTypes = ['bollard', 'car', 'sign', 'language', 'generation', 'antenna', 'coverage'];
-  let metaTypes: string[] = [];
+  const META_TYPE_OPTIONS = [
+    'antenna',
+    'arrow',
+    'bollard',
+    'brickwork',
+    'building',
+    'car',
+    'curb',
+    'double-yellow',
+    'utility box',
+    'flag',
+    'guardrail',
+    'license',
+    'grass',
+    'mirror',
+    'mountain',
+    'pavement',
+    'pole',
+    'road lines',
+    'rock',
+    'roof',
+    'roundabout',
+    'satellite dish',
+    'shrubbery',
+    'sidewalk',
+    'signs',
+    'street light',
+    'terrain',
+    'language',
+    'trunk',
+    'vegetation',
+    'wall',
+    'window'
+  ];
 
-  onMount(async () => {
-    detectDescription();
-    detectCountry();
-    await loadMetaTypes();
-    detectMetaType();
-    detectImage();
+  const KEYWORD_MAP: Record<string, string[]> = {
+    'double-yellow': ['double yellow', 'yellow lines'],
+    'road lines': ['road lines', 'yellow lines']
+  };
+  META_TYPE_OPTIONS.forEach((t) => {
+    if (!KEYWORD_MAP[t]) KEYWORD_MAP[t] = [t];
+    else KEYWORD_MAP[t].push(t);
+  });
+
+  onMount(() => {
+    const runAutofill = () => {
+      detectDescription();
+      detectCountry();
+      detectMetaType();
+      detectImage();
+    };
+
+    if (panelEl?.isConnected) {
+      runAutofill();
+    } else {
+      const observer = new MutationObserver(() => {
+        if (panelEl?.isConnected) {
+          observer.disconnect();
+          runAutofill();
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
   });
 
   $: continent = countryContinents[country] || '';
@@ -48,30 +103,19 @@
     }
   }
 
-  async function loadMetaTypes() {
-    try {
-      const res = await gmRequest({
-        method: 'GET',
-        url: `${SUPABASE_URL}/rest/v1/meta_types?select=name`,
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`
-        }
-      });
-      if (res.status >= 200 && res.status < 300) {
-        metaTypes = JSON.parse(res.responseText).map((t: any) => t.name.toLowerCase());
-      }
-    } catch (e) {
-      // ignore fetch errors and rely on fallbackMetaTypes
-    }
-  }
-
   function detectMetaType() {
-    const note = description.toLowerCase();
-    const types = metaTypes.length ? metaTypes : fallbackMetaTypes;
-    const found = types.find((t) => note.includes(t));
-    if (found) {
-      meta_type = found;
+    const elements = document.querySelectorAll(
+      'strong.svelte-a3mhc8, .geometa-note.svelte-a3mhc8'
+    );
+    let text = '';
+    elements.forEach((el) => {
+      text += ' ' + (el.textContent?.toLowerCase() || '');
+    });
+    for (const [type, keywords] of Object.entries(KEYWORD_MAP)) {
+      if (keywords.some((k) => text.includes(k))) {
+        meta_type = type;
+        break;
+      }
     }
   }
 
@@ -134,7 +178,8 @@
     max-width: 300px;
   }
   .hint-panel input,
-  .hint-panel textarea {
+  .hint-panel textarea,
+  .hint-panel select {
     width: 100%;
     margin-bottom: 0.25rem;
     color: #000;
@@ -159,7 +204,7 @@
   }
 </style>
 
-<div class="hint-panel">
+<div class="hint-panel" bind:this={panelEl}>
   <header>
     <strong>Hint</strong>
     <button class="close" on:click={() => (document.getElementById('geometa-hints')?.remove())}>×</button>
@@ -168,7 +213,15 @@
     <label>Country <input bind:value={country} on:keydown|stopPropagation /></label>
   </div>
   <div>
-    <label>Meta type <input bind:value={meta_type} on:keydown|stopPropagation /></label>
+    <label>
+      Meta type
+      <select bind:value={meta_type} on:keydown|stopPropagation on:change|stopPropagation>
+        <option value=""></option>
+        {#each META_TYPE_OPTIONS as t}
+          <option value={t}>{t}</option>
+        {/each}
+      </select>
+    </label>
   </div>
   <div>
     <label>Description <textarea rows="2" bind:value={description} on:keydown|stopPropagation></textarea></label>
