@@ -76,20 +76,6 @@
   async function submit() {
     try {
       detectImage();
-      const checkRes = await gmRequest({
-        method: 'GET',
-        url: `${SUPABASE_URL}/rest/v1/hints?select=id&image_url=eq.${encodeURIComponent(image_url)}`,
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`
-        }
-      });
-      const existing = JSON.parse(checkRes.responseText);
-      if (existing.length > 0) {
-        error = 'Hint already exists for this image URL';
-        inSupabase = true;
-        return;
-      }
       const res = await gmRequest({
         method: 'POST',
         url: `${SUPABASE_URL}/rest/v1/hints`,
