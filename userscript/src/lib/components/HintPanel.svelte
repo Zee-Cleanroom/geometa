@@ -9,6 +9,7 @@
   let description = '';
   let image_url = '';
   let error = '';
+  let inSupabase = false;
 
   const metaTypes = ['bollard', 'car', 'sign', 'language', 'generation', 'antenna', 'coverage'];
 
@@ -34,9 +35,31 @@
     }
   }
 
+  async function checkSupabase() {
+    if (!image_url) {
+      inSupabase = false;
+      return;
+    }
+    try {
+      const res = await gmRequest({
+        method: 'GET',
+        url: `${SUPABASE_URL}/rest/v1/hints?select=id&image_url=eq.${encodeURIComponent(image_url)}`,
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      const rows = JSON.parse(res.responseText);
+      inSupabase = rows.length > 0;
+    } catch (e) {
+      inSupabase = false;
+    }
+  }
+
   function detectImage() {
     const img = document.querySelector('[class*="result-layout_root"] img.responsive-image');
     image_url = img?.getAttribute('src') || '';
+    checkSupabase();
   }
 
   function gmRequest(options: any): Promise<any> {
@@ -63,6 +86,7 @@
       const existing = JSON.parse(checkRes.responseText);
       if (existing.length > 0) {
         error = 'Hint already exists for this image URL';
+        inSupabase = true;
         return;
       }
       const res = await gmRequest({
@@ -81,6 +105,7 @@
         description = '';
         image_url = '';
         error = '';
+        inSupabase = true;
       } else {
         error = 'Failed to submit';
       }
@@ -128,6 +153,13 @@
     cursor: pointer;
     color: #fff;
   }
+  .actions {
+    margin-top: 0.25rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+  }
 </style>
 
 <div class="hint-panel">
@@ -147,5 +179,8 @@
   {#if error}
     <div class="error">{error}</div>
   {/if}
-  <button on:click={submit}>Submit</button>
+  <div class="actions">
+    <button on:click={submit}>Submit</button>
+    <span>{inSupabase ? 'in Supabase' : 'not in Supabase'}</span>
+  </div>
 </div>

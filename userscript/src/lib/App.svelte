@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { GM_xmlhttpRequest } from '$';
+  import { GM_xmlhttpRequest, GM_info } from '$';
   import Spinner from './components/Spinner.svelte';
   import CountryFlag from './components/CountryFlag.svelte';
   import { onPointerDown, onPointerMove, onPointerUp, setContainerPosition } from './utils/dragging';
@@ -22,6 +22,7 @@
   }
 
   let { panoId, mapId, userscriptVersion, source, roundNumber }: Props = $props();
+  const scriptVersion = GM_info.script.version;
 
   type GeoInfo = {
     country: string;
@@ -157,6 +158,7 @@
 
 </script>
 
+<div class="geometa-version">v{scriptVersion}</div>
 <div class="geometa-container" bind:this={container}>
 
   {#await getAnnouncement() then announcement}
@@ -615,5 +617,15 @@
   :global(.geometa-pin-question:hover) {
     background: #0056b3;
     transform: scale(1.1);
+  }
+
+  .geometa-version {
+    position: fixed;
+    top: 0.5rem;
+    right: 0.5rem;
+    color: #fff;
+    z-index: 10000;
+    font-size: 0.8rem;
+    pointer-events: none;
   }
 </style>
